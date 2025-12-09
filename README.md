@@ -142,7 +142,7 @@ header += c;
 **Exploração da vulnerabilidade:**  
 Falta de autenticação no servidor web (Ponto 1).
 
-### Passo a passo (nível conceitual):
+### Passo a passo:
 
 1. O atacante conecta-se à mesma rede Wi-Fi do dispositivo IoT.
 2. Identifica o endereço IP do ESP32 na rede local.
@@ -165,7 +165,7 @@ Crítico – Alta probabilidade de ocorrência combinada com alto impacto operac
 **Exploração da vulnerabilidade:**  
 Falta de limitação de tamanho da entrada armazenada na variável `String header` (Ponto 3).
 
-### Passo a passo (nível conceitual):
+### Passo a passo:
 
 1. O atacante identifica o IP do ESP32 na rede.
 2. Envia requisições HTTP com cabeçalhos ou URLs excessivamente longos.
@@ -188,7 +188,7 @@ Alto – Gera interrupção do serviço e perda de confiabilidade do sistema.
 **Exploração da vulnerabilidade:**  
 Uso de HTTP sem criptografia (Ponto 2).
 
-### Passo a passo (nível conceitual):
+### Passo a passo:
 
 1. O atacante conecta-se à mesma rede Wi-Fi do sistema.
 2. Monitora o tráfego de rede entre o usuário legítimo e o ESP32 utilizando ferramentas de análise de pacotes.
