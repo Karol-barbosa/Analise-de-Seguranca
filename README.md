@@ -109,7 +109,7 @@ Qualquer cliente conectado à mesma rede pode acessar o ESP32.
 WiFiClient client = server.available();
 ````
 
-## Uso de HTTP sem criptografia
+### Uso de HTTP sem criptografia
 
 O servidor funciona na porta 80, usando HTTP puro.
 
@@ -125,62 +125,93 @@ Trecho crítico:
 ````
 if (header.indexOf("GET /26/on") >= 0)
 ````
+### Falta de Limitação/Validação de Entradas
+
+### Falta de controle de tamanho da requisição (Risco de Buffer Overflow / DoS)
+
+O código armazena toda a requisição HTTP recebida na variável `String header` sem nenhum limite de tamanho:
+
+Trecho crítico:
+````
+header += c;
+````
 ---
 
-## Possíveis Ataques Identificados
+## Ataque 1 – Acesso Não Autorizado ao Dispositivo
 
-### Ataque 1 – Acesso não autorizado ao dispositivo
+**Exploração da vulnerabilidade:**  
+Falta de autenticação no servidor web (Ponto 1).
 
-**Descrição:**  
-Exploração da falta de autenticação do servidor web do ESP32.
+### Passo a passo (nível conceitual):
 
-#### Passo a passo:
+1. O atacante conecta-se à mesma rede Wi-Fi do dispositivo IoT.
+2. Identifica o endereço IP do ESP32 na rede local.
+3. Acessa o IP por meio de um navegador ou cliente HTTP.
+4. Obtém acesso direto ao painel de controle, conseguindo manipular os GPIOs sem necessidade de credenciais.
 
-1. O atacante se conecta à mesma rede Wi-Fi do dispositivo.
-2. Descobre o IP do ESP32 na rede local.
-3. Digita o IP no navegador.
-4. Obtém acesso ao painel do dispositivo sem necessidade de login.
+### Probabilidade:
+Alta – Em redes compartilhadas, o acesso local é comum e a técnica é simples de executar.
 
-#### Probabilidade:
-Alta – redes Wi-Fi costumam ser compartilhadas.
+### Impacto:
+Alto – Permite controle indevido do dispositivo, podendo acionar ou desativar cargas elétricas ou sistemas conectados.
 
-#### Impacto:
-Alto – controle indevido do dispositivo.
-
-#### Risco resultante:
-Crítico – combinação de alta probabilidade com alto impacto.
-
----
-
-### Ataque 2 – Interceptação de dados 
-
-**Descrição:**  
-Exploração da comunicação sem criptografia.
-
-#### Passo a passo:
-
-1. O atacante se conecta à mesma rede Wi-Fi.
-2. Utiliza ferramentas de captura de pacotes (ex: Wireshark).
-3. Monitora o tráfego da rede.
-4. Visualiza os dados trocados entre o usuário e o ESP32.
-
-#### Probabilidade:
-Média – requer conhecimento técnico.
-
-#### Impacto:
-Alto – exposição de informações e comandos.
-
-#### Risco resultante:
-Alto – possibilidade real de danos ao sistema.
+### Risco resultante:
+Crítico – Alta probabilidade de ocorrência combinada com alto impacto operacional.
 
 ---
 
-## Tabela Consolidada de Ataques (Ordenada por Risco)
+## Ataque 2 – Negação de Serviço (DoS) por Sobrecarga de Requisição
 
-| Título do Ataque                       | Probabilidade | Impacto | Risco Final |
-|----------------------------------------|---------------|---------|-------------|
-| Acesso não autorizado ao ESP32         | Alta          | Alto    | Crítico     |
-| Interceptação de dados via HTTP        | Média         | Alto    | Alto        |
+**Exploração da vulnerabilidade:**  
+Falta de limitação de tamanho da entrada armazenada na variável `String header` (Ponto 3).
+
+### Passo a passo (nível conceitual):
+
+1. O atacante identifica o IP do ESP32 na rede.
+2. Envia requisições HTTP com cabeçalhos ou URLs excessivamente longos.
+3. O ESP32 tenta armazenar toda a requisição na memória.
+4. O consumo excessivo de RAM causa travamento, reinicialização ou indisponibilidade do dispositivo.
+
+### Probabilidade:
+Média – Requer algum conhecimento técnico, mas é viável contra dispositivos com recursos limitados.
+
+### Impacto:
+Alto – O dispositivo torna-se indisponível, impedindo o uso legítimo.
+
+### Risco resultante:
+Alto – Gera interrupção do serviço e perda de confiabilidade do sistema.
+
+---
+
+## Ataque 3 – Interceptação de Dados em Trânsito (Man-in-the-Middle)
+
+**Exploração da vulnerabilidade:**  
+Uso de HTTP sem criptografia (Ponto 2).
+
+### Passo a passo (nível conceitual):
+
+1. O atacante conecta-se à mesma rede Wi-Fi do sistema.
+2. Monitora o tráfego de rede entre o usuário legítimo e o ESP32 utilizando ferramentas de análise de pacotes.
+3. Como a comunicação ocorre em texto simples, é possível visualizar comandos e respostas trocados.
+
+### Probabilidade:
+Média – Exige acesso à rede local e conhecimento básico de redes.
+
+### Impacto:
+Médio – Exposição de informações sensíveis e dos comandos enviados ao dispositivo.
+
+### Risco resultante:
+Médio – Possibilidade real de espionagem do tráfego, comprometendo a confidencialidade.
+
+---
+
+## Tabela Consolidada de Riscos dos Ataques
+
+| Título do Ataque                                | Probabilidade | Impacto | Risco Final |
+|--------------------------------------------------|---------------|---------|-------------|
+| Acesso Não Autorizado ao Dispositivo             | Alta          | Alto    | Crítico     |
+| Negação de Serviço por Sobrecarga de Requisição  | Média         | Alto    | Alto        |
+| Interceptação de Dados em Trânsito (MitM)        | Média         | Médio   | Médio       |
 
 ---
 
